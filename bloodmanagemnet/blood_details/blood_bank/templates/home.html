@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-image: url('static/img/blood bi1.jpg'); /* Specify the path to your image */
+            background-size: cover;
+            background-position: center;
+        }
+        .header {
+            background-color: #007bff;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            margin: 20px auto; /* Center the container */
+            text-align: center;
+            width: 60%; /* Adjust the width as needed */
+            background-color: rgba(255, 255, 255, 0.2); /* Transparent white */
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+        .logout-button {
+            background-color: #f44336;
+        }
+        .logout-button:hover {
+            background-color: #da190b;
+        }
+        .options-container {
+            display: none;
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.0); /* Transparent white */
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0);
+            padding: 12px 16px;
+            z-index: 1;
+        }
+        .options-container button {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .dropdown-container {
+            position: relative;
+            display: inline-block;
+        }
+        form {
+            display: none; /* Initially hide the form */
+        }
+        input {
+            margin-bottom: 10px;
+            padding: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .modal {
+            display: none; /* Hide the modal popup by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto; /* 5% from the top, centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Could be more or less, depending on screen size */
+            border-radius: 10px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Welcome to Blood Donation Portal</h1>
+    <div class="dropdown-container">
+        <button class="button" onclick="toggleOptions('donor-options')">Donor</button>
+        <div class="options-container" id="donor-options">
+            <button class="button" onclick="toggleForm()">Add New Details</button>
+            <!-- Removed "Update Details" button -->
+            <button class="button" onclick="openModal('allDonorModal')">All Donor Details</button>
+
+        </div>
+    </div>
+    <!-- Removed search button and options -->
+    <form action="{% url 'logout' %}" method="post" style="display: inline;">
+        {% csrf_token %}
+        <button class="button logout-button" type="submit">Logout</button>
+    </form>
+</div>
+
+<div class="container">
+    <!-- Your main content goes here -->
+    <h2></h2>
+    <div id="add-new-details" style="display: none;"> <!-- Initially hide the add new details line -->
+        
+    </div>
+    
+    <form action="{% url 'add_new_donor' %}" method="post" id="add-new-form">
+        {% csrf_token %}
+        <input type="text" name="blood_id" id="blood-id" placeholder="Blood ID" readonly value="1"><br>
+        <input type="text" name="name" placeholder="Name" required><br>
+        <input type="text" name="father_name" placeholder="Father's Name" required><br>
+        <input type="text" name="mother_name" placeholder="Mother's Name" required><br>
+        <input type="date" name="date_of_birth" placeholder="Date of Birth" required><br>
+        <input type="number" name="age" placeholder="Age" required><br>
+        <input type="tel" name="mobile_number" placeholder="Mobile Number" required><br>
+        <input type="radio" name="gender" value="Male" checked> Male
+        <input type="radio" name="gender" value="Female"> Female<br>
+        <input type="text" name="blood_group" placeholder="Blood Group" required><br>
+        <input type="text" name="city" placeholder="City" required><br>
+        <textarea name="address" placeholder="Address" rows="4" required></textarea><br>
+        <button type="submit" class="button">Submit</button>
+    </form>
+</div>
+
+<!-- Modal popup for displaying all donor details -->
+<div id="allDonorModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('allDonorModal')">&times;</span>
+        <h2>All Donor Details</h2>
+        <div id="donor-details-table"></div>
+    </div>
+</div>
+
+<script>
+    var bloodId = 1; // Initialize blood ID
+
+    function toggleOptions(containerId) {
+        var optionsContainer = document.getElementById(containerId);
+        if (optionsContainer.style.display === "none") {
+            optionsContainer.style.display = "block";
+        } else {
+            optionsContainer.style.display = "none";
+        }
+    }
+
+    function toggleForm() {
+        var form = document.getElementById("add-new-form");
+        var addNewDetails = document.getElementById("add-new-details");
+        if (form.style.display === "none") {
+            form.style.display = "block";
+            addNewDetails.style.display = "block";
+        } else {
+            form.style.display = "none";
+            addNewDetails.style.display = "none";
+        }
+    }
+
+    // Update Blood ID field with incremented value
+    document.getElementById("add-new-form").addEventListener("submit", function(event) {
+        event.preventDefault();
+        document.getElementById("blood-id").value = bloodId++; // Increment and assign blood ID
+        
+        // Submit the form using AJAX
+        var formData = new FormData(this);
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'  // Include CSRF token
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displaySuccessMessage(data.message || 'Donor added successfully!'); // Display success message or default message
+                // Reset the form
+                this.reset(); 
+                // Increment bloodId
+                bloodId++;
+                // Update the blood ID field
+                document.getElementById("blood-id").value = bloodId;
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    // Function to display success message
+    function displaySuccessMessage(message) {
+        var successMessageElement = document.createElement('p');
+        successMessageElement.innerText = message;
+        successMessageElement.style.color = 'green';
+        document.getElementById('add-new-details').appendChild(successMessageElement);
+    }
+
+    // Function to open the modal popup
+    function openModal(modalId) {
+        var modal = document.getElementById(modalId);
+        modal.style.display = "block";
+        
+        // Fetch all donor details when modal is opened
+        fetchAllDonorDetails();
+    }
+
+    // Function to close the modal popup
+    function closeModal(modalId) {
+        var modal = document.getElementById(modalId);
+        modal.style.display = "none";
+    }
+
+    function fetchAllDonorDetails() {
+        fetch("{% url 'fetch_all_donor_details' %}")
+        .then(response => response.json())
+        .then(data => {
+            if (data.donors && data.donors.length > 0) {
+                var tableHTML = "<table><tr><th>Name</th><th>Father's Name</th><th>Mother's Name</th><th>Date of Birth</th><th>Age</th><th>Mobile Number</th><th>Blood Group</th><th>City</th><th>Address</th></tr>";
+                data.donors.forEach(donor => {
+                    tableHTML += "<tr><td>" + donor.name + "</td><td>" + donor.father_name + "</td><td>" + donor.mother_name + "</td><td>" + donor.date_of_birth + "</td><td>" + donor.age + "</td><td>" + donor.mobile_number + "</td><td>" + donor.blood_group + "</td><td>" + donor.city + "</td><td>" + donor.address + "</td></tr>";
+                });
+                tableHTML += "</table>";
+                document.getElementById("donor-details-table").innerHTML = tableHTML;
+            } else {
+                document.getElementById("donor-details-table").innerText = "No donor details available.";
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
+</body>
+</html>
